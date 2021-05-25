@@ -14,6 +14,10 @@ from datetime import datetime
 import sys
 import os
 
+os.system("/home/pi/KAITOmronLogger/setup.sh")
+FILENAME = "/home/pi/KAITOmronLogger/log/%d.csv"%time.time()
+
+
 # LED display rule. Normal Off.
 DISPLAY_RULE_NORMALLY_OFF = 0
 # LED display rule. Normal On.
@@ -138,9 +142,9 @@ def getSensorData(data):
 #    }
 
 
-FILENAME = "log/%d.csv"%time.time()
 
 def addFile(str):
+  print('Output: '+str)
   os.system('echo "'+str+'" >> '+FILENAME)
 
 addFile("unixtime,time_measured,temperature,relative_humidity,ambient_light,barometric_pressure" \
@@ -150,15 +154,12 @@ addFile("unixtime,time_measured,temperature,relative_humidity,ambient_light,baro
      ",eco2_flag,discomfort_index_flag,heat_stroke_flag,si_value_flag" \
      ",pga_flag,seismic_intensity_flag")
 
-#with open(FILENAME,'w', encoding='UTF-8') as f:
-
 import schedule
 
 def job():
   #print(time.time())
 
   if OMRON_SERIAL_ID != '':
-    print('Accessing the sensor.')
     # Get Latest data Long.
     command = bytearray([0x52, 0x42, 0x05, 0x00, 0x01, 0x21, 0x50])
     command = command + calc_crc(command, len(command))
@@ -174,5 +175,5 @@ def job():
 startSensor()
 while True:
   #schedule.run_pending()
-  job()
   time.sleep(5)
+  job()

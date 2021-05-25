@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 #pip3 install pyserial schedule
 
 sudo modprobe ftdi_sio
