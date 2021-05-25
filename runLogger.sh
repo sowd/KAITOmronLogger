@@ -5,17 +5,17 @@
 #OMRON_SERIAL_ID="/dev/ttyUSB0"
 OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
 
+LOG_INTERVAL=60
+
+import time
+FILENAME = "/home/pi/KAITOmronLogger/log/%d.csv"%time.time()
+
 
 import argparse
 import json
 import serial
-import time
 from datetime import datetime
 import sys
-import os
-
-os.system("/home/pi/KAITOmronLogger/setup.sh")
-FILENAME = "/home/pi/KAITOmronLogger/log/%d.csv"%time.time()
 
 
 # LED display rule. Normal Off.
@@ -23,6 +23,8 @@ DISPLAY_RULE_NORMALLY_OFF = 0
 # LED display rule. Normal On.
 DISPLAY_RULE_NORMALLY_ON = 1
 
+import os
+os.system("/home/pi/KAITOmronLogger/setup.sh")
 
 def calc_crc(buf, length):
     """
@@ -175,5 +177,5 @@ def job():
 startSensor()
 while True:
   #schedule.run_pending()
-  time.sleep(5)
+  time.sleep(LOG_INTERVAL)
   job()
