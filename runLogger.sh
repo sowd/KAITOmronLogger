@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding:utf-8 -*-
 
-LOG_INTERVAL=5
+LOG_INTERVAL=60
 
 import sys,os,time,glob
 import argparse,json,serial
