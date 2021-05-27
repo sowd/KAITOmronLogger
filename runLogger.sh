@@ -1,30 +1,38 @@
 #!/usr/bin/python3
 # -*- coding:utf-8 -*-
 
-
-#OMRON_SERIAL_ID="/dev/ttyUSB0"
-OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
-
 LOG_INTERVAL=60
 
-import time
-FILENAME = "/home/pi/KAITOmronLogger/log/%d.csv"%time.time()
+import glob
+devCandidates=glob.glob('/dev/serial/by-id/usb-OMRON_2JCIE-*')
+if len(devCandidates)==0 :
+  print('Please connect OMRON 2JCIE sensor to an USB port')
+  exit(-1)
 
+OMRON_SERIAL_ID=devCandidates[0]
+#OMRON_SERIAL_ID="/dev/ttyUSB0"
+#OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
+print('Connecting to '+OMRON_SERIAL_ID)
 
+import sys,os
 import argparse
 import json
 import serial
 from datetime import datetime
-import sys
 
+import time
+MYPATH=os.path.dirname(os.path.abspath(__file__))
+
+FILENAME = "%s/log/%d.csv"%(MYPATH,time.time())
+print('Output file: '+FILENAME)
+print('============')
 
 # LED display rule. Normal Off.
 DISPLAY_RULE_NORMALLY_OFF = 0
 # LED display rule. Normal On.
 DISPLAY_RULE_NORMALLY_ON = 1
 
-import os
-os.system("/home/pi/KAITOmronLogger/setup.sh")
+os.system(MYPATH+"/setup.sh")
 
 def calc_crc(buf, length):
     """
