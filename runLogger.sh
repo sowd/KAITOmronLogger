@@ -1,31 +1,16 @@
 #!/usr/bin/python3
 # -*- coding:utf-8 -*-
 
-LOG_INTERVAL=60
+LOG_INTERVAL=5
 
-import glob
-devCandidates=glob.glob('/dev/serial/by-id/usb-OMRON_2JCIE-*')
-if len(devCandidates)==0 :
-  print('Please connect OMRON 2JCIE sensor to an USB port')
-  exit(-1)
-
-OMRON_SERIAL_ID=devCandidates[0]
-#OMRON_SERIAL_ID="/dev/ttyUSB0"
-#OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
-print('Connecting to '+OMRON_SERIAL_ID)
-
-import sys,os
-import argparse
-import json
-import serial
+import sys,os,time,glob
+import argparse,json,serial
 from datetime import datetime
 
-import time
 MYPATH=os.path.dirname(os.path.abspath(__file__))
 
 FILENAME = "%s/log/%d.csv"%(MYPATH,time.time())
 print('Output file: '+FILENAME)
-print('============')
 
 # LED display rule. Normal Off.
 DISPLAY_RULE_NORMALLY_OFF = 0
@@ -33,6 +18,21 @@ DISPLAY_RULE_NORMALLY_OFF = 0
 DISPLAY_RULE_NORMALLY_ON = 1
 
 os.system(MYPATH+"/setup.sh")
+
+while True:
+  devCandidates=glob.glob('/dev/serial/by-id/usb-OMRON_2JCIE-*')
+  if len(devCandidates)==0 :
+    print('Please connect OMRON 2JCIE sensor to an USB port')
+    time.sleep(3)
+    continue
+  break
+OMRON_SERIAL_ID=devCandidates[0]
+#OMRON_SERIAL_ID="/dev/ttyUSB0"
+#OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
+print('Connecting to '+OMRON_SERIAL_ID)
+
+print('============')
+
 
 def calc_crc(buf, length):
     """
