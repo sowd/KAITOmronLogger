@@ -3,14 +3,41 @@
 
 LOG_INTERVAL=60
 
+# Slack notification
+SLACK_URL = 'https://hooks.slack.com/services/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'
+#SLACK_URL = ''  # Disable slack post
+DISCONFORT_THRESHOLD = 90.0
+RANDOM_NOTIFY_INTERVAL_AVG_SEC = 3*60*60 # 3 hours
+
 import sys,os,time,glob
 import argparse,json,serial
 from datetime import datetime
+import subprocess
+
+def PostToSlack(msg):
+  if len(SLACK_URL)==0 :
+    print(msg)
+    return
+
+  try:
+    args = [
+      'curl','-X','POST','-H','Content-Type: application/json','-d'
+      ,'{"text":"'+msg+'"}',SLACK_URL
+    ]
+    res = subprocess.check_call(args)
+  except:
+    print("Error in posting to slack.");
+
+import socket
+
+def pr(msg):
+  PostToSlack(socket.gethostname()+':'+msg)
+
 
 MYPATH=os.path.dirname(os.path.abspath(__file__))
 
 FILENAME = "%s/log/%d.csv"%(MYPATH,time.time())
-print('Output file: '+FILENAME)
+pr('Output file: '+FILENAME)
 
 # LED display rule. Normal Off.
 DISPLAY_RULE_NORMALLY_OFF = 0
@@ -22,14 +49,14 @@ os.system(MYPATH+"/setup.sh")
 while True:
   devCandidates=glob.glob('/dev/serial/by-id/usb-OMRON_2JCIE-*')
   if len(devCandidates)==0 :
-    print('Please connect OMRON 2JCIE sensor to an USB port')
+    pr('Please connect OMRON 2JCIE sensor to an USB port')
     time.sleep(3)
     continue
   break
 OMRON_SERIAL_ID=devCandidates[0]
 #OMRON_SERIAL_ID="/dev/ttyUSB0"
 #OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
-print('Connecting to '+OMRON_SERIAL_ID)
+pr('Connecting to '+OMRON_SERIAL_ID)
 
 print('============')
 
@@ -78,9 +105,9 @@ def startSensor():
         # script finish.
         serSensor.exit
 
-
-
+isPrevDisconfort = False
 def getSensorData(data):
+    global isPrevDisconfort
     """
     print measured latest value.
     """
@@ -112,6 +139,10 @@ def getSensorData(data):
     si_value_flag = str(int(hex(data[53]), 16))
     pga_flag = str(int(hex(data[54]), 16))
     seismic_intensity_flag = str(int(hex(data[55]), 16))
+
+    if isPrevDisconfort==False and float(discomfort_index) > DISCONFORT_THRESHOLD :
+      pr("Disconfort index: "+discomfort_index)
+    isPrevDisconfort = (float(discomfort_index) > DISCONFORT_THRESHOLD)
 
     return "%d,%s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s, %s,%s,%s,%s,%s,%s" % (
        time.time()
@@ -183,7 +214,15 @@ def job():
 #schedule.every(5).seconds.do(job)
 
 startSensor()
+
+import random
+rndNotifyCountdown = int( 0.5 * RANDOM_NOTIFY_INTERVAL_AVG_SEC + random.random() * RANDOM_NOTIFY_INTERVAL_AVG_SEC )
 while True:
   #schedule.run_pending()
   time.sleep(LOG_INTERVAL)
   job()
+
+  rndNotifyCountdown = rndNotifyCountdown - LOG_INTERVAL
+  if rndNotifyCountdown < 0 :
+    pr('Random nofication')
+    rndNotifyCountdown = int( 0.5 * RANDOM_NOTIFY_INTERVAL_AVG_SEC + random.random() * RANDOM_NOTIFY_INTERVAL_AVG_SEC )
