@@ -4,7 +4,7 @@
 LOG_INTERVAL=60
 
 # Slack notification
-SLACK_URL = 'https://hooks.slack.com/services/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'
+SLACK_URL = 'https://hooks.slack.com/services/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'
 #SLACK_URL = ''  # Disable slack post
 DISCONFORT_THRESHOLD = 90.0
 RANDOM_NOTIFY_INTERVAL_AVG_SEC = 3*60*60 # 3 hours
@@ -217,12 +217,19 @@ startSensor()
 
 import random
 rndNotifyCountdown = int( 0.5 * RANDOM_NOTIFY_INTERVAL_AVG_SEC + random.random() * RANDOM_NOTIFY_INTERVAL_AVG_SEC )
-while True:
-  #schedule.run_pending()
-  time.sleep(LOG_INTERVAL)
-  job()
 
-  rndNotifyCountdown = rndNotifyCountdown - LOG_INTERVAL
-  if rndNotifyCountdown < 0 :
-    pr('Random nofication')
-    rndNotifyCountdown = int( 0.5 * RANDOM_NOTIFY_INTERVAL_AVG_SEC + random.random() * RANDOM_NOTIFY_INTERVAL_AVG_SEC )
+linenum = 0
+with open( "%s/catLines.txt"%(MYPATH) ) as f:
+  msgs = f.readlines()
+
+  while True:
+    #schedule.run_pending()
+    time.sleep(LOG_INTERVAL)
+    job()
+
+    rndNotifyCountdown = rndNotifyCountdown - LOG_INTERVAL
+    if rndNotifyCountdown < 0 :
+      #pr('Random nofication')
+      pr(msgs[linenum])
+      linenum = linenum+1
+      rndNotifyCountdown = int( 0.5 * RANDOM_NOTIFY_INTERVAL_AVG_SEC + random.random() * RANDOM_NOTIFY_INTERVAL_AVG_SEC )
