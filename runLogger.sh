@@ -219,7 +219,8 @@ import random
 rndNotifyCountdown = int( 0.5 * RANDOM_NOTIFY_INTERVAL_AVG_SEC + random.random() * RANDOM_NOTIFY_INTERVAL_AVG_SEC )
 
 linenum = 0
-with open( "%s/catLines.txt"%(MYPATH) ) as f:
+#with open( "%s/catLines.txt"%(MYPATH) ) as f:
+with open( "%s/yodakaLines.txt"%(MYPATH) ) as f:
   msgs = f.readlines()
 
   while True:
