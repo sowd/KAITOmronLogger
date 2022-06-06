@@ -1,14 +1,8 @@
 #!/usr/bin/python3
 # -*- coding:utf-8 -*-
 
-
-#OMRON_SERIAL_ID="/dev/ttyUSB0"
-OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
-
-
-DEFAULT_HOST_NAME='localhost'
+# webAPI port name
 PORT_NUM=8081
-
 
 import argparse
 import json
@@ -16,10 +10,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
-
-# for IRemocon
-import socket
-
 
 # for Omron sensor
 import serial
@@ -32,6 +22,30 @@ DISPLAY_RULE_NORMALLY_OFF = 0
 DISPLAY_RULE_NORMALLY_ON = 1
 
 
+import os,glob
+
+# Run the setup script
+MYPATH=os.path.dirname(os.path.abspath(__file__))
+os.system(MYPATH+"/setup.sh")
+
+
+# List & elect the connected sensor device
+while True:
+  devCandidates=glob.glob('/dev/serial/by-id/usb-OMRON_2JCIE-*')
+  if len(devCandidates)==0 :
+    print('Please connect OMRON 2JCIE sensor to an USB port')
+    time.sleep(3)
+    continue
+  break
+
+OMRON_SERIAL_ID=devCandidates[0]
+#OMRON_SERIAL_ID="/dev/ttyUSB0"
+#OMRON_SERIAL_ID="/dev/serial/by-id/usb-OMRON_2JCIE-BU01_MY3AIXN7-if00-port0"
+
+print('Connecting to '+OMRON_SERIAL_ID)
+
+
+# Parse sensor data
 def calc_crc(buf, length):
     """
     CRC-16 calculation.
@@ -144,6 +158,9 @@ def getSensorData(data):
     }
 
 
+##############################################
+###### JSONP API server setup
+
 class MyHandler(BaseHTTPRequestHandler):
     """
     Received the request as json, send the response as json
@@ -169,7 +186,8 @@ class MyHandler(BaseHTTPRequestHandler):
 
               # Respond by JSONP
               self.send_response(200)
-              self.send_header('Content-type', 'application/x-javascript')
+              #self.send_header('Content-type', 'application/x-javascript')
+              self.send_header('Content-type', 'application/json')
               self.end_headers()
               responseBody = parsed.query[9:]+'('+json.dumps(sensorData)+')'
 
@@ -207,38 +225,36 @@ class MyHandler(BaseHTTPRequestHandler):
 
 serPato = None
 
-def run(server_class=HTTPServer, handler_class=MyHandler, server_name=DEFAULT_HOST_NAME, port=PORT_NUM):
+def run(server_class=HTTPServer, handler_class=MyHandler, port=PORT_NUM):
     print('Omron sensor serial ID: '+OMRON_SERIAL_ID);
     print('===========');
-    print('Starting API server at '+server_name+':'+str(port));
-    print(' (No other host name can be used for REST access)');
-    print('Changing host name: -H [host name]');
-    print('Changing port #: -P [port num]');
+    print('Starting API server at port '+str(port));
+    print('To change the port, supply: -P [port num]');
+    print('Access sample: curl localhost:8081?callback=abcde');
 
 
     # start omron sensor
     if OMRON_SERIAL_ID != '':
         startSensor()
 
-    server = server_class((server_name, port), handler_class)
+    server = server_class(('', port), handler_class)
 
     server.serve_forever()
 
 def importargs():
     parser = argparse.ArgumentParser("This is the simple server")
 
-    parser.add_argument('--host', '-H', required=False, default=DEFAULT_HOST_NAME)
     parser.add_argument('--port', '-P', required=False, type=int, default=PORT_NUM)
 
     args = parser.parse_args()
 
-    return args.host, args.port
+    return args.port
 
 
 def main():
-    host, port = importargs()
+    port = importargs()
 
-    run(server_name=host, port=port)
+    run(port=port)
 
 if __name__ == '__main__':
     main()

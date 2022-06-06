@@ -4,8 +4,8 @@
 LOG_INTERVAL=60
 
 # Slack notification
-SLACK_URL = 'https://hooks.slack.com/services/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'
-#SLACK_URL = ''  # Disable slack post
+# ToDo: Replace the following SLACK_URL to your incoming webhooks API url
+SLACK_URL = 'https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX'
 DISCONFORT_THRESHOLD = 90.0
 RANDOM_NOTIFY_INTERVAL_AVG_SEC = 3*60*60 # 3 hours
 
