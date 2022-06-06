@@ -22,6 +22,10 @@ DISPLAY_RULE_NORMALLY_OFF = 0
 DISPLAY_RULE_NORMALLY_ON = 1
 
 
+import socket
+hostnam = socket.gethostname()+'.local'
+
+
 import os,glob
 
 # Run the setup script
@@ -174,7 +178,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
             ret = ''
 
-            if OMRON_SERIAL_ID != '' and parsed.query.startswith("callback="):
+            if OMRON_SERIAL_ID != '':
               print('Accessing the sensor.')
               # Get Latest data Long.
               command = bytearray([0x52, 0x42, 0x05, 0x00, 0x01, 0x21, 0x50])
@@ -189,7 +193,11 @@ class MyHandler(BaseHTTPRequestHandler):
               #self.send_header('Content-type', 'application/x-javascript')
               self.send_header('Content-type', 'application/json')
               self.end_headers()
-              responseBody = parsed.query[9:]+'('+json.dumps(sensorData)+')'
+
+              if parsed.query.startswith("callback="):
+                responseBody = parsed.query[9:]+'('+json.dumps(sensorData)+')'
+              else:
+                responseBody = json.dumps(sensorData)
 
               self.wfile.write(responseBody.encode('utf-8'))
 
@@ -230,7 +238,8 @@ def run(server_class=HTTPServer, handler_class=MyHandler, port=PORT_NUM):
     print('===========');
     print('Starting API server at port '+str(port));
     print('To change the port, supply: -P [port num]');
-    print('Access sample: curl localhost:8081?callback=abcde');
+    print(f'Access sample: curl http://{hostnam}:{port}');
+    print(f'For JSONP access, add "callback" param as: curl http://{hostnam}:{port}?callback=abcde');
 
 
     # start omron sensor
